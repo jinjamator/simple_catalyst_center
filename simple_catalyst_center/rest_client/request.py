@@ -31,7 +31,10 @@ def make_request(client, request):
     elif "json" in content_type:
         body = client_response.text
         if body:
-            body = client_response.json().get("response")
+            try:
+                body = client_response.json().get("response")
+            except AttributeError:
+                body = client_response.json()
     else:
         body = client_response.content
 
