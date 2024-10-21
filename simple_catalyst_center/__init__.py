@@ -33,6 +33,7 @@ class CiscoCatalystCenterClient(object):
             json_encode_body=True,  # encode body as json
             ssl_verify=kwargs.get("ssl_verify", None),
             resource_class=CiscoCatalystCenterResource,
+            log_curl_commands=kwargs.get("log_curl_commands",False)
         )
 
     def __str__(self):

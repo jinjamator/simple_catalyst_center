@@ -5,6 +5,7 @@ import httpx
 from .exceptions import ActionNotFound, ActionURLMatchError
 from .models import Request
 from .request import make_async_request, make_request
+from curlify2 import Curlify
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,8 @@ class BaseResource:
         self.actions = self.actions or self.default_actions
         self.ssl_verify = True if ssl_verify is None else ssl_verify
         self._ep_suffix = ep_suffix
+        self.curl_commands=kwargs.get("curl_commands",[])
+        self._log_curl=kwargs.get("log_curl_commands",False)
         self._kwargs = kwargs
 
         if self.json_encode_body:
@@ -144,10 +147,17 @@ class Resource(BaseResource):
 
             request.params.update(self.params)
             request.headers.update(self.headers)
+         
+            result=make_request(self.client, request)
+
+            if self._log_curl:
+                self.curl_commands.append((Curlify(request,verify=request.ssl_verify).to_curl(),result))
+
+
             if only_body:
-                return make_request(self.client, request).body
+                return result.body
             else:
-                return make_request(self.client, request)
+                return result
 
         setattr(self, action_name, MethodType(action_method, self))
 

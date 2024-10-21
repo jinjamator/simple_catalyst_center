@@ -28,6 +28,8 @@ class API:
         self._log = logging.getLogger(__file__)
         self._ep_suffix = ep_suffix
         self._kwargs = kwargs
+        self.curl_commands=[]
+        self._log_curl=kwargs.get("log_curl_commands",False)
         if self.json_encode_body:
             self.headers["content-type"] = "application/json"
 
@@ -60,6 +62,8 @@ class API:
                 append_slash=append_slash or self.append_slash,
                 json_encode_body=json_encode_body or self.json_encode_body,
                 ssl_verify=self.ssl_verify,
+                curl_commands=self.curl_commands,
+                log_curl=self._log_curl
                 **self._kwargs
             )
             if not getattr(parent, objname, None):
@@ -86,6 +90,8 @@ class API:
             json_encode_body=self.json_encode_body,
             ssl_verify=self.ssl_verify,
             ep_suffix=self._ep_suffix,
+            curl_commands=self.curl_commands,
+            log_curl=self._log_curl,
             **self._kwargs
         )
         setattr(self, instance, self._resources[instance])
