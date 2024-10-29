@@ -42,7 +42,6 @@ class Curlify:
         Returns:
             str: string represents curl command
         """
-        print(dir(self.req))
         quote = f"curl -X {self.req.method} -H {self.headers()}"
         body_data=self.body_decode()
         if body_data:
