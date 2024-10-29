@@ -5,7 +5,7 @@ import httpx
 from .exceptions import ActionNotFound, ActionURLMatchError
 from .models import Request
 from .request import make_async_request, make_request
-from curlify2 import Curlify
+from .curlify import Curlify
 
 logger = logging.getLogger(__name__)
 
