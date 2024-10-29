@@ -43,19 +43,23 @@ class Curlify:
             str: string represents curl command
         """
         quote = f"curl -X {self.req.method} -H {self.headers()}"
+        
+        if self.compressed:
+            quote += " --compressed"
+        if not self.verify:
+            quote += " --insecure"
+
         body_data=self.body_decode()
         if body_data:
             quote += f" -d '{body_data}'"
         params=""
+
         if self.req.params:
             params="?"
             for k,v in self.req.params.items():
                 params+=f"{k}={v}"
         quote +=f" '{self.req.url}{params}'"
 
-        if self.compressed:
-            quote += " --compressed"
-        if not self.verify:
-            quote += " --insecure"
+
 
         return quote
