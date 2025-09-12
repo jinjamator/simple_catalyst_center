@@ -38,6 +38,7 @@ class BaseResource:
         self._ep_suffix = ep_suffix
         self.curl_commands=kwargs.get("curl_commands",[])
         self._log_curl=kwargs.get("log_curl_commands",False)
+
         self._kwargs = kwargs
 
         if self.json_encode_body:
@@ -51,6 +52,7 @@ class BaseResource:
         return {
             "list": {"method": "GET", "url": self.resource_name},
             "get": {"method": "GET", "url": self.resource_name},
+            "all": {"method": "GET", "url": self.resource_name},
             "create": {"method": "POST", "url": self.resource_name},
             "post": {"method": "POST", "url": self.resource_name},
             "retrieve": {"method": "GET", "url": self.resource_name + "/{}"},
@@ -134,24 +136,70 @@ class Resource(BaseResource):
             if "only_body" in kwargs:
                 only_body = kwargs["only_body"]
                 del kwargs["only_body"]
-            request = Request(
-                url=url,
-                method=method,
-                params=params or {},
-                body=body,
-                headers=headers or {},
-                timeout=self.timeout,
-                ssl_verify=self.ssl_verify,
-                kwargs=kwargs,
-            )
+            
 
-            request.params.update(self.params)
-            request.headers.update(self.headers)
-         
-            result=make_request(self.client, request)
+            print(method)
+            if action_name in ["all"]:
 
-            if self._log_curl:
-                self.curl_commands.append((Curlify(request,verify=request.ssl_verify).to_curl(),result))
+                limit=kwargs.get("limit",500)
+                if params:
+                    limit = params.get("limit")
+            
+                if "limit"in kwargs:
+                    del kwargs["limit"]
+                
+                request = Request(
+                    url=url,
+                    method=method,
+                    params=params or {},
+                    body=body,
+                    headers=headers or {},
+                    timeout=self.timeout,
+                    ssl_verify=self.ssl_verify,
+                    kwargs=kwargs,
+                )
+
+                request.params.update(self.params)
+                request.headers.update(self.headers)
+                logging.debug("enabled autopaging, this implicitly forces only_body")
+                
+                logging.debug(f"request result limit is {limit}")
+                offset = 1 
+                result_body=[]
+                
+                finished=False
+            
+                while not finished:
+                    request.params["limit"]=limit
+                    request.params["offset"]=offset
+                    
+                    result=make_request(self.client, request)
+                    if self._log_curl:
+                        self.curl_commands.append((Curlify(request,verify=request.ssl_verify).to_curl(),result))
+                    result_count=len(result.body)
+                    if result_count < limit:
+                        finished=True
+                    offset+=limit
+                    result_body+=(result.body)
+                return result_body
+            else:
+
+                request = Request(
+                    url=url,
+                    method=method,
+                    params=params or {},
+                    body=body,
+                    headers=headers or {},
+                    timeout=self.timeout,
+                    ssl_verify=self.ssl_verify,
+                    kwargs=kwargs,
+                )
+                request.params.update(self.params)
+                request.headers.update(self.headers)
+                result=make_request(self.client, request)
+
+                if self._log_curl:
+                    self.curl_commands.append((Curlify(request,verify=request.ssl_verify).to_curl(),result))
 
 
             if only_body:
