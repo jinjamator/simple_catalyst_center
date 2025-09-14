@@ -108,6 +108,8 @@ use autopaging with GET
 use autopaging with POST
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. code-block:: python
+
 
     import os
     import sys
