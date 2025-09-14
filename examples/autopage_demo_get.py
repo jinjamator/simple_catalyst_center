@@ -1,4 +1,5 @@
 import os
+import sys
 try:
     from simple_catalyst_center import CiscoCatalystCenterClient
 except ImportError:

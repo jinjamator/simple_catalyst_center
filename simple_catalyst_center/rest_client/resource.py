@@ -131,22 +131,30 @@ class Resource(BaseResource):
             **kwargs,
         ):
             url = self.get_action_full_url(action_name, *args)
-            method = self.get_action_method(action_name)
+            method = kwargs.get("method",self.get_action_method(action_name))
             only_body = True
             if "only_body" in kwargs:
                 only_body = kwargs["only_body"]
                 del kwargs["only_body"]
             
+          
 
-            print(method)
             if action_name in ["all"]:
-
+                offset = 1 
                 limit=kwargs.get("limit",500)
                 if params:
                     limit = params.get("limit")
-            
+
+                if body:
+                    if "page" in body:
+                        limit = body["page"].get("limit",limit)
+                        offset = body["page"].get("offset",offset)
+
                 if "limit"in kwargs:
                     del kwargs["limit"]
+                
+                if "method" in kwargs:
+                    del kwargs["method"]
                 
                 request = Request(
                     url=url,
@@ -164,15 +172,22 @@ class Resource(BaseResource):
                 logging.debug("enabled autopaging, this implicitly forces only_body")
                 
                 logging.debug(f"request result limit is {limit}")
-                offset = 1 
+                
                 result_body=[]
                 
                 finished=False
             
                 while not finished:
-                    request.params["limit"]=limit
-                    request.params["offset"]=offset
-                    
+                    if method.lower() == "get":
+                        request.params["limit"]=limit
+                        request.params["offset"]=offset
+                    elif method.lower() == "post":
+                        if body:
+                            body["page"]={
+                                "limit": limit,
+                                "offset": offset
+                            }
+                            
                     result=make_request(self.client, request)
                     if self._log_curl:
                         self.curl_commands.append((Curlify(request,verify=request.ssl_verify).to_curl(),result))
